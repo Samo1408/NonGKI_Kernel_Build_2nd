@@ -41,7 +41,7 @@ env:
   KERNELSU_METHOD: "manual"
 
   # Use the repository-provided Linux 4.14 SUSFS v2.3.0 patch.
-  SUSFS_ENABLE: true
+  SUSFS_ENABLE: false
   SUSFS_FIXED: false
 
   AK3_SOURCE: "https://github.com/osm0sis/AnyKernel3.git"
@@ -127,6 +127,28 @@ jobs:
 
       - name: Patch Kernel of NoMount
         uses: ./.github/workflows/patch-nomount
+
+      - name: Diagnose sched.h before compilation
+        run: |
+          cd "$GITHUB_WORKSPACE/device_kernel"
+
+          echo "===== SOURCE COMMIT ====="
+          git rev-parse HEAD
+
+          echo "===== SCHED.H PATH ====="
+          realpath include/linux/sched.h
+
+          echo "===== SCHED.H LINES 1380-1555 ====="
+          sed -n '1380,1555p' include/linux/sched.h
+
+          echo "===== PID FUNCTION DEFINITIONS ====="
+          grep -nE '^[[:space:]]*(static inline )?.*\b(task_pid|task_tgid|task_pgrp|task_session|pid_alive)\(' include/linux/sched.h
+
+          echo "===== SCHED.H MODIFICATIONS ====="
+          git diff -- include/linux/sched.h
+
+          echo "===== GIT STATUS ====="
+          git status --short
 
       - name: Build kernel
         uses: ./.github/workflows/build-process
