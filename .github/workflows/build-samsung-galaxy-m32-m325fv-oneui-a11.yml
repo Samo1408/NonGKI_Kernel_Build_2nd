@@ -9,7 +9,7 @@ env:
   DEVICE_CODENAME: "m32"
 
   CUSTOM_CMDS: "CLANG_TRIPLE=aarch64-linux-gnu-"
-  EXTRA_CMDS: "LD=ld.lld LLVM=1 LLVM_IAS=1"
+  EXTRA_CMDS: "LD=ld.lld LLVM=1 LLVM_IAS=1 KCFLAGS=-Wno-error=unused-variable"
 
   KERNEL_SOURCE: "https://github.com/Samo141988/kernel_m32.git"
   KERNEL_BRANCH: "android-4.14-stable"
