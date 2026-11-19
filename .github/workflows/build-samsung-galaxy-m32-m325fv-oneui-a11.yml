@@ -11,8 +11,8 @@ env:
   CUSTOM_CMDS: "CLANG_TRIPLE=aarch64-linux-gnu-"
   EXTRA_CMDS: "LD=ld.lld LLVM=1 LLVM_IAS=1"
 
-  KERNEL_SOURCE: "https://github.com/Samo1408/android_kernel_samsung_m32.git"
-  KERNEL_BRANCH: "main"
+  KERNEL_SOURCE: "https://github.com/Samo141988/kernel_m32.git"
+  KERNEL_BRANCH: "android-4.14-stable"
 
   # Toolchains from rsuntk/toolchains.
   # Clang 12 is on the clang-12 branch.
@@ -31,7 +31,7 @@ env:
   DEFCONFIG_ORIGIN_IMAGE: ""
   DEFCONFIG_FROM_BOOT: false
 
-  # Remove the kernel source's pre-integrated KernelSU first, then add FinaSU.
+  # Integrate FinaSU into the clean kernel source.
   KERNELSU_SOURCE: "https://github.com/LyraVoid/FinaSU.git"
   # FinaSU developer recommends dev for older kernels such as Linux 4.14.
   KERNELSU_BRANCH: "dev"
@@ -40,8 +40,8 @@ env:
   KERNELSU_AUTO_FORK: ""
   KERNELSU_METHOD: "manual"
 
-  # Use the repository-provided Linux 4.14 SUSFS v2.3.0 patch.
-  SUSFS_ENABLE: false
+  # Enable SUSFS integration for Linux 4.14.
+  SUSFS_ENABLE: true
   SUSFS_FIXED: false
 
   AK3_SOURCE: "https://github.com/osm0sis/AnyKernel3.git"
@@ -127,28 +127,6 @@ jobs:
 
       - name: Patch Kernel of NoMount
         uses: ./.github/workflows/patch-nomount
-
-      - name: Diagnose sched.h before compilation
-        run: |
-          cd "$GITHUB_WORKSPACE/device_kernel"
-
-          echo "===== SOURCE COMMIT ====="
-          git rev-parse HEAD
-
-          echo "===== SCHED.H PATH ====="
-          realpath include/linux/sched.h
-
-          echo "===== SCHED.H LINES 1380-1555 ====="
-          sed -n '1380,1555p' include/linux/sched.h
-
-          echo "===== PID FUNCTION DEFINITIONS ====="
-          grep -nE '^[[:space:]]*(static inline )?.*\b(task_pid|task_tgid|task_pgrp|task_session|pid_alive)\(' include/linux/sched.h
-
-          echo "===== SCHED.H MODIFICATIONS ====="
-          git diff -- include/linux/sched.h
-
-          echo "===== GIT STATUS ====="
-          git status --short
 
       - name: Build kernel
         uses: ./.github/workflows/build-process
