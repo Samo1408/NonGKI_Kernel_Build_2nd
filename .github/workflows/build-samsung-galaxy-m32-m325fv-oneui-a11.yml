@@ -9,6 +9,8 @@ env:
   DEVICE_CODENAME: "m32"
 
   CUSTOM_CMDS: "CLANG_TRIPLE=aarch64-linux-gnu-"
+  # Skip broken Git LFS smudge downloads in the Clang repo (404 objects).
+  GIT_LFS_SKIP_SMUDGE: "1"
   EXTRA_CMDS: "LD=ld.lld LLVM=1 LLVM_IAS=1 KCFLAGS=-Wno-error=unused-variable"
 
   KERNEL_SOURCE: "https://github.com/Samo1408/android_kernel_samsung_mt6768.git"
@@ -17,7 +19,7 @@ env:
   # Clang toolchain from Samo1408/Zyc.
   # Keep the existing clang-12 branch name pending verification.
   CLANG_SOURCE: "https://github.com/Samo1408/Zyc.git"
-  CLANG_BRANCH: "main"
+  CLANG_BRANCH: "clang-12"
   # 64-bit Android GNU cross-compiler is on the google branch.
   GCC_GNU: true
   GCC_64_SOURCE: "https://github.com/rsuntk/toolchains.git"
