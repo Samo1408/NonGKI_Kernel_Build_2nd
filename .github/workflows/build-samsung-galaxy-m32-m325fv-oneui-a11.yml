@@ -40,8 +40,8 @@ env:
   KERNELSU_AUTO_FORK: ""
   KERNELSU_METHOD: "manual"
 
-  # Enable SUSFS integration for Linux 4.14.
-  SUSFS_ENABLE: true
+  # Temporarily disable SUSFS while testing the clean source and FinaSU.
+  SUSFS_ENABLE: false
   SUSFS_FIXED: false
 
   AK3_SOURCE: "https://github.com/osm0sis/AnyKernel3.git"
@@ -104,9 +104,6 @@ jobs:
 
       - name: Clean pre-integrated KernelSU hooks, then integrate FinaSU
         uses: ./.github/workflows/build-ready
-
-      - name: Patch Kernel of SUSFS
-        uses: ./.github/workflows/patch-susfs
 
       - name: Patch for no-kprobe
         uses: ./.github/workflows/patch-no-kprobe
