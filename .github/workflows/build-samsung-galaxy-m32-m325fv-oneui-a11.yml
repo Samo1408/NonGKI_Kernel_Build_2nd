@@ -1,4 +1,4 @@
-name: Build Samsung Galaxy M32 M325FV (OneUI A11 / Linux 4.14)
+name: Build Samsung Galaxy M32 M325FV (OpenELA source test)
 
 on:
   workflow_call:
@@ -11,8 +11,8 @@ env:
   CUSTOM_CMDS: "CLANG_TRIPLE=aarch64-linux-gnu-"
   EXTRA_CMDS: "LD=ld.lld LLVM=1 LLVM_IAS=1 KCFLAGS=-Wno-error=unused-variable"
 
-  KERNEL_SOURCE: "https://github.com/Samo141988/kernel_m32.git"
-  KERNEL_BRANCH: "android-4.14-stable"
+  KERNEL_SOURCE: "https://github.com/Samo1408/android_kernel_samsung_mt6768.git"
+  KERNEL_BRANCH: "openela"
 
   # Toolchains from rsuntk/toolchains.
   # Clang 12 is on the clang-12 branch.
@@ -80,7 +80,7 @@ env:
 
 jobs:
   build-kernel:
-    name: Samsung Galaxy M32 M325FV (OneUI A11 / Linux 4.14)
+    name: Samsung Galaxy M32 M325FV (OpenELA source test)
     runs-on: ubuntu-24.04
     env:
       CCACHE_COMPILERCHECK: "%compiler% -dumpmachine; %compiler% -dumpversion"
