@@ -1,0 +1,107 @@
+name: Build Samsung Galaxy M32 M325FV (OneUI A11 / Linux 4.14)
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+env:
+  DEVICE_NAME: "samsung_galaxy_m32"
+  DEVICE_CODENAME: "m32"
+
+  CUSTOM_CMDS: "CLANG_TRIPLE=aarch64-linux-gnu-"
+  EXTRA_CMDS: "LD=ld.lld LLVM=1 LLVM_IAS=1"
+
+  KERNEL_SOURCE: "https://github.com/Samo1408/android_kernel_samsung_m32.git"
+  KERNEL_BRANCH: "main"
+
+  # Use the toolchain already provisioned by the shared build environment.
+  CLANG_SOURCE: ""
+  CLANG_BRANCH: ""
+  GCC_GNU: false
+  GCC_64_SOURCE: ""
+  GCC_64_BRANCH: ""
+  GCC_32_SOURCE: ""
+  GCC_32_BRANCH: ""
+
+  DEFCONFIG_SOURCE: ""
+  DEFCONFIG_NAME: "rsuntk_defconfig"
+  DEFCONFIG_ORIGIN_IMAGE: ""
+  DEFCONFIG_FROM_BOOT: false
+
+  # Remove the kernel source's pre-integrated KernelSU first, then add FinaSU.
+  KERNELSU_SOURCE: "https://github.com/LyraVoid/FinaSU.git"
+  # Empty means clone the repository default branch (avoid assuming master/main).
+  KERNELSU_BRANCH: ""
+  KERNELSU_FOLDER: "FinaSU"
+  KERNELSU_AUTO_GET: "false"
+  KERNELSU_AUTO_FORK: ""
+  KERNELSU_METHOD: "manual"
+
+  # Use the repository-provided Linux 4.14 SUSFS v2.3.0 patch.
+  SUSFS_ENABLE: true
+  SUSFS_FIXED: false
+
+  AK3_SOURCE: "https://github.com/osm0sis/AnyKernel3.git"
+  AK3_BRANCH: "master"
+  BOOT_SOURCE: ""
+  NEED_DTBO: false
+  NEED_SAFE_DTBO: false
+
+  ROM_TEXT: "oneui_a11_linux4.14"
+  PYTHON_VERSION: "3"
+  PACK_METHOD: "AnyKernel3"
+  PACK_KMODULES: "false"
+
+  PATCHES_SOURCE: ""
+  PATCHES_BRANCH: ""
+  SUSFS_FOLDER_FIXED: ""
+  SUSFS_PATCH_FIXED: ""
+
+  REKERNEL_ENABLE: "false"
+  DROIDSPACES_ENABLE: "false"
+  NOMOUNT_ENABLE: "false"
+  HOOK_METHOD: "syscall"
+
+  KPM_ENABLE: "false"
+  KPM_INLINE: "false"
+  KPM_KPATCH_NEXT: "false"
+  KPM_PATCH_SOURCE: "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU_patch/refs/heads/main/kpm/patch_linux"
+  BASEBAND_GUARD_ENABLE: "false"
+  BASEBAND_GUARD_BOOT: "false"
+  GENERATE_DTB: "false"
+  GENERATE_CHIP: "mediatek"
+  BUILD_DEBUGGER: "false"
+  SKIP_PATCH: "false"
+  BUILD_OTHER_CONFIG: "false"
+  MERGE_CONFIG_FILES: ""
+  FREE_MORE_SPACE: "false"
+
+jobs:
+  build-kernel:
+    name: Samsung Galaxy M32 M325FV (OneUI A11 / Linux 4.14)
+    runs-on: ubuntu-24.04
+    env:
+      CCACHE_COMPILERCHECK: "%compiler% -dumpmachine; %compiler% -dumpversion"
+      CCACHE_NOHASHDIR: "true"
+      CCACHE_HARDLINK: "true"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Prepare compilation environment
+        uses: ./.github/workflows/build-env
+
+      - name: Clean pre-integrated KernelSU hooks, then integrate FinaSU
+        uses: ./.github/workflows/build-ready
+
+      - name: Apply SUSFS v2.3.0 Linux 4.14 patch
+        uses: ./.github/workflows/patch-susfs
+
+      - name: Build kernel
+        uses: ./.github/workflows/build-process
+
+      - name: Package AnyKernel3
+        uses: ./.github/workflows/pack-process
+
+      - name: Upload build artifacts
+        uses: ./.github/workflows/upload-files
