@@ -105,16 +105,24 @@ runs:
             fi
           fi
 
-      - name: Cleaned KernelSU and Hook
+      - name: Remove the kernel's pre-integrated KernelSU and hooks
         shell: bash
         run: |
-          cd $GITHUB_WORKSPACE/device_kernel
+          cd "$GITHUB_WORKSPACE/device_kernel"
 
-          echo "::group::[+] Starting clean hook..."
-          cp /tmp/Bin/clean_hook.sh ./
-          bash clean_hook.sh
+          test -f /tmp/Bin/clean_hook.sh || { echo "[-] Bin/clean_hook.sh is missing."; exit 1; }
+          echo "::group::[+] Cleaning pre-integrated KernelSU/SUSFS hooks..."
+          bash /tmp/Bin/clean_hook.sh
           echo "::endgroup::"
-          echo "[+] Cleaned hook."
+
+          # Do not continue if a previous KernelSU integration survived cleanup.
+          for path in drivers/kernelsu KernelSU KernelSU-Next; do
+            if [ -e "$path" ] || [ -L "$path" ]; then
+              echo "[-] Cleanup did not remove $path"
+              exit 1
+            fi
+          done
+          echo "[+] Existing KernelSU integration cleaned."
 
       - name: Set KernelSU
         shell: bash
@@ -199,7 +207,22 @@ runs:
                 git clone "https://github.com/$KERNELSU_AUTHOR/$KERNELSU_NAME.git" -b "$KERNELSU_BRANCH" "$KERNELSU_FOLDER"
                 ln -sf "../$KERNELSU_FOLDER/kernel" "drivers/kernelsu"
                 grep -q "kernelsu" "$GITHUB_WORKSPACE/device_kernel/drivers/Makefile" || printf "\nobj-\$(CONFIG_KSU) += kernelsu/\n" >> $GITHUB_WORKSPACE/device_kernel/drivers/Makefile
-                grep -q "source \"drivers/kernelsu/Kconfig\"" "$GITHUB_WORKSPACE/device_kernel/drivers/Kconfig" || sed -i "/endmenu/i\source \"drivers/kernelsu/Kconfig\"" "${GITHUB_WORKSPACE}/device_kernel/drivers/Kconfig"
+                python3 - <<'PY'
+          from pathlib import Path
+          p = Path("drivers/Kconfig")
+          text = p.read_text()
+          source = 'source "drivers/kernelsu/Kconfig"'
+          if text.count(source) > 1:
+              raise SystemExit("[-] Duplicate KernelSU Kconfig source entries found.")
+          if source not in text:
+              lines = text.splitlines()
+              indexes = [i for i, line in enumerate(lines) if line.strip() == "endmenu"]
+              if not indexes:
+                  raise SystemExit("[-] No endmenu found in drivers/Kconfig; refusing unsafe insertion.")
+              lines.insert(indexes[-1], source)
+              p.write_text("\n".join(lines) + "\n")
+          print("[+] KernelSU Kconfig source is included once before the final endmenu.")
+          PY
                 echo "[+] KernelSU Settings done."
 
             elif [[ "${{ env.KERNELSU_METHOD }}" == "only" ]]; then
@@ -210,30 +233,57 @@ runs:
           }
 
           KERNELSU_MANUAL(){
-            if [[ "${{ env.KERNELSU_SOURCE }}" == *Next* ]]; then
+            # Device workflows may override the checkout directory (M325FV uses FinaSU).
+            KERNELSU_FOLDER="${{ env.KERNELSU_FOLDER }}"
+            if [[ -z "$KERNELSU_FOLDER" ]]; then
+              if [[ "${{ env.KERNELSU_SOURCE }}" == *Next* ]]; then
                 KERNELSU_FOLDER="KernelSU-Next"
-                echo "KERNELSU_NAME=$KERNELSU_FOLDER" >> $GITHUB_ENV
-
-            else
+              else
                 KERNELSU_FOLDER="KernelSU"
-                echo "KERNELSU_NAME=$KERNELSU_FOLDER" >> $GITHUB_ENV
-
+              fi
             fi
+            echo "KERNELSU_NAME=$KERNELSU_FOLDER" >> "$GITHUB_ENV"
 
             if [[ "${{ env.KERNELSU_METHOD }}" == "shell" ]]; then
                 curl -sSL "${{ env.KERNELSU_SOURCE }}" | bash -s "${{ env.KERNELSU_BRANCH }}"
 
             elif [[ "${{ env.KERNELSU_METHOD }}" == "manual" ]]; then
-                git clone "${{ env.KERNELSU_SOURCE }}" -b "${{ env.KERNELSU_BRANCH }}" "$KERNELSU_FOLDER"
-                ln -sf "../$KERNELSU_FOLDER/kernel" "drivers/kernelsu"
-                grep -q "kernelsu" "$GITHUB_WORKSPACE/device_kernel/drivers/Makefile" || printf "\nobj-\$(CONFIG_KSU) += kernelsu/\n" >> $GITHUB_WORKSPACE/device_kernel/drivers/Makefile
-                grep -q "source \"drivers/kernelsu/Kconfig\"" "$GITHUB_WORKSPACE/device_kernel/drivers/Kconfig" || sed -i "/endmenu/i\source \"drivers/kernelsu/Kconfig\"" "${GITHUB_WORKSPACE}/device_kernel/drivers/Kconfig"
-                echo "[+] KernelSU Settings done."
+                if [[ -n "${{ env.KERNELSU_BRANCH }}" ]]; then
+                  git clone --depth=1 "${{ env.KERNELSU_SOURCE }}" -b "${{ env.KERNELSU_BRANCH }}" "$KERNELSU_FOLDER"
+                else
+                  git clone --depth=1 "${{ env.KERNELSU_SOURCE }}" "$KERNELSU_FOLDER"
+                fi
+                test -f "$KERNELSU_FOLDER/kernel/Kconfig" || { echo "[-] FinaSU/KernelSU kernel/Kconfig not found."; exit 1; }
+                ln -sfn "../$KERNELSU_FOLDER/kernel" "drivers/kernelsu"
+                grep -q "kernelsu" "$GITHUB_WORKSPACE/device_kernel/drivers/Makefile" || printf "\nobj-\$(CONFIG_KSU) += kernelsu/\n" >> "$GITHUB_WORKSPACE/device_kernel/drivers/Makefile"
+                python3 - <<'PY'
+          from pathlib import Path
+          p = Path("drivers/Kconfig")
+          text = p.read_text()
+          source = 'source "drivers/kernelsu/Kconfig"'
+          if text.count(source) > 1:
+              raise SystemExit("[-] Duplicate KernelSU Kconfig source entries found.")
+          if source not in text:
+              lines = text.splitlines()
+              indexes = [i for i, line in enumerate(lines) if line.strip() == "endmenu"]
+              if not indexes:
+                  raise SystemExit("[-] No endmenu found in drivers/Kconfig; refusing unsafe insertion.")
+              lines.insert(indexes[-1], source)
+              p.write_text("\n".join(lines) + "\n")
+          print("[+] KernelSU Kconfig source is included once before the final endmenu.")
+          PY
+                echo "[+] FinaSU integrated at drivers/kernelsu."
 
             elif [[ "${{ env.KERNELSU_METHOD }}" == "only" ]]; then
-                git clone "${{ env.KERNELSU_SOURCE }}" -b "${{ env.KERNELSU_BRANCH }}" "$KERNELSU_FOLDER"
-                ln -sf "../$KERNELSU_FOLDER/kernel" "drivers/kernelsu"
-
+                if [[ -n "${{ env.KERNELSU_BRANCH }}" ]]; then
+                  git clone --depth=1 "${{ env.KERNELSU_SOURCE }}" -b "${{ env.KERNELSU_BRANCH }}" "$KERNELSU_FOLDER"
+                else
+                  git clone --depth=1 "${{ env.KERNELSU_SOURCE }}" "$KERNELSU_FOLDER"
+                fi
+                ln -sfn "../$KERNELSU_FOLDER/kernel" "drivers/kernelsu"
+            else
+                echo "[-] Unsupported KERNELSU_METHOD: ${{ env.KERNELSU_METHOD }}"
+                exit 1
             fi
           }
 
