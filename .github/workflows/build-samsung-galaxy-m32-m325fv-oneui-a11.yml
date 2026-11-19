@@ -19,7 +19,7 @@ env:
   # Clang toolchain from Samo1408/Zyc.
   # Keep the existing clang-12 branch name pending verification.
   CLANG_SOURCE: "https://github.com/Samo1408/Zyc.git"
-  CLANG_BRANCH: "clang-12"
+  CLANG_BRANCH: "main"
   # 64-bit Android GNU cross-compiler is on the google branch.
   GCC_GNU: true
   GCC_64_SOURCE: "https://github.com/rsuntk/toolchains.git"
