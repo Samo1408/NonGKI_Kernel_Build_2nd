@@ -60,6 +60,18 @@ env:
   REKERNEL_ENABLE: "false"
   DROIDSPACES_ENABLE: "false"
   NOMOUNT_ENABLE: "false"
+  BASEBAND_GUARD_ENABLE: "false"
+  BASEBAND_GUARD_BOOT: "false"
+  KPM_ENABLE: "false"
+  KPM_INLINE: "false"
+  KPM_KPATCH_NEXT: "false"
+  KPM_PATCH_SOURCE: "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU_patch/refs/heads/main/kpm/patch_linux"
+  HOOK_METHOD: "syscall"
+  GENERATE_DTB: "false"
+  GENERATE_CHIP: "mediatek"
+  BUILD_DEBUGGER: "false"
+  SKIP_PATCH: "false"
+  FREE_MORE_SPACE: "false"
   HOOK_METHOD: "syscall"
 
   KPM_ENABLE: "false"
@@ -94,8 +106,28 @@ jobs:
       - name: Clean pre-integrated KernelSU hooks, then integrate FinaSU
         uses: ./.github/workflows/build-ready
 
-      - name: Apply SUSFS v2.3.0 Linux 4.14 patch
+      - name: Patch Kernel of SUSFS
         uses: ./.github/workflows/patch-susfs
+
+      - name: Patch for no-kprobe
+        uses: ./.github/workflows/patch-no-kprobe
+
+      - name: Extra Kernel Options
+        run: |
+          cd $GITHUB_WORKSPACE/device_kernel
+          # M32-specific extra options; intentionally empty until validated.
+
+      - name: Patch Kernel of Re:Kernel
+        uses: ./.github/workflows/patch-rekernel
+
+      - name: Patch Kernel of Droidspaces
+        uses: ./.github/workflows/patch-droidspaces
+
+      - name: Patch Kernel of Baseband Guard
+        uses: ./.github/workflows/patch-baseband-guard
+
+      - name: Patch Kernel of NoMount
+        uses: ./.github/workflows/patch-nomount
 
       - name: Build kernel
         uses: ./.github/workflows/build-process
