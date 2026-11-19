@@ -14,12 +14,15 @@ env:
   KERNEL_SOURCE: "https://github.com/Samo1408/android_kernel_samsung_m32.git"
   KERNEL_BRANCH: "main"
 
-  # Use the toolchain already provisioned by the shared build environment.
-  CLANG_SOURCE: ""
-  CLANG_BRANCH: ""
-  GCC_GNU: false
-  GCC_64_SOURCE: ""
-  GCC_64_BRANCH: ""
+  # Toolchains from rsuntk/toolchains.
+  # Clang 12 is on the clang-12 branch.
+  CLANG_SOURCE: "https://github.com/rsuntk/toolchains.git"
+  CLANG_BRANCH: "clang-12"
+  # 64-bit Android GNU cross-compiler is on the google branch.
+  GCC_GNU: true
+  GCC_64_SOURCE: "https://github.com/rsuntk/toolchains.git"
+  GCC_64_BRANCH: "google"
+  # No 32-bit ARM toolchain source was supplied; keep this unset until verified.
   GCC_32_SOURCE: ""
   GCC_32_BRANCH: ""
 
