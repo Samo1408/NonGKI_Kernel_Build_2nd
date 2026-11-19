@@ -30,8 +30,8 @@ env:
 
   # Remove the kernel source's pre-integrated KernelSU first, then add FinaSU.
   KERNELSU_SOURCE: "https://github.com/LyraVoid/FinaSU.git"
-  # Empty means clone the repository default branch (avoid assuming master/main).
-  KERNELSU_BRANCH: ""
+  # FinaSU developer recommends dev for older kernels such as Linux 4.14.
+  KERNELSU_BRANCH: "dev"
   KERNELSU_FOLDER: "FinaSU"
   KERNELSU_AUTO_GET: "false"
   KERNELSU_AUTO_FORK: ""
