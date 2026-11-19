@@ -212,16 +212,14 @@ runs:
           p = Path("drivers/Kconfig")
           text = p.read_text()
           source = 'source "drivers/kernelsu/Kconfig"'
-          if text.count(source) > 1:
-              raise SystemExit("[-] Duplicate KernelSU Kconfig source entries found.")
-          if source not in text:
-              lines = text.splitlines()
-              indexes = [i for i, line in enumerate(lines) if line.strip() == "endmenu"]
-              if not indexes:
-                  raise SystemExit("[-] No endmenu found in drivers/Kconfig; refusing unsafe insertion.")
-              lines.insert(indexes[-1], source)
-              p.write_text("\n".join(lines) + "\n")
-          print("[+] KernelSU Kconfig source is included once before the final endmenu.")
+          lines = [line for line in text.splitlines() if line.strip() != source]
+          indexes = [i for i, line in enumerate(lines) if line.strip() == "endmenu"]
+          if not indexes:
+              raise SystemExit("[-] No endmenu found in drivers/Kconfig; refusing unsafe insertion.")
+          # Keep the drivers menu closed before sourcing KernelSU's own Kconfig.
+          lines.insert(indexes[-1] + 1, source)
+          p.write_text("\n".join(lines) + "\n")
+          print("[+] KernelSU Kconfig source placed after drivers menu endmenu.")
           PY
                 echo "[+] KernelSU Settings done."
 
@@ -261,16 +259,14 @@ runs:
           p = Path("drivers/Kconfig")
           text = p.read_text()
           source = 'source "drivers/kernelsu/Kconfig"'
-          if text.count(source) > 1:
-              raise SystemExit("[-] Duplicate KernelSU Kconfig source entries found.")
-          if source not in text:
-              lines = text.splitlines()
-              indexes = [i for i, line in enumerate(lines) if line.strip() == "endmenu"]
-              if not indexes:
-                  raise SystemExit("[-] No endmenu found in drivers/Kconfig; refusing unsafe insertion.")
-              lines.insert(indexes[-1], source)
-              p.write_text("\n".join(lines) + "\n")
-          print("[+] KernelSU Kconfig source is included once before the final endmenu.")
+          lines = [line for line in text.splitlines() if line.strip() != source]
+          indexes = [i for i, line in enumerate(lines) if line.strip() == "endmenu"]
+          if not indexes:
+              raise SystemExit("[-] No endmenu found in drivers/Kconfig; refusing unsafe insertion.")
+          # Keep the drivers menu closed before sourcing KernelSU's own Kconfig.
+          lines.insert(indexes[-1] + 1, source)
+          p.write_text("\n".join(lines) + "\n")
+          print("[+] KernelSU Kconfig source placed after drivers menu endmenu.")
           PY
                 echo "[+] FinaSU integrated at drivers/kernelsu."
 
