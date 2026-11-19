@@ -72,21 +72,8 @@ env:
   BUILD_DEBUGGER: "false"
   SKIP_PATCH: "false"
   FREE_MORE_SPACE: "false"
-  HOOK_METHOD: "syscall"
-
-  KPM_ENABLE: "false"
-  KPM_INLINE: "false"
-  KPM_KPATCH_NEXT: "false"
-  KPM_PATCH_SOURCE: "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU_patch/refs/heads/main/kpm/patch_linux"
-  BASEBAND_GUARD_ENABLE: "false"
-  BASEBAND_GUARD_BOOT: "false"
-  GENERATE_DTB: "false"
-  GENERATE_CHIP: "mediatek"
-  BUILD_DEBUGGER: "false"
-  SKIP_PATCH: "false"
   BUILD_OTHER_CONFIG: "false"
   MERGE_CONFIG_FILES: ""
-  FREE_MORE_SPACE: "false"
 
 jobs:
   build-kernel:
