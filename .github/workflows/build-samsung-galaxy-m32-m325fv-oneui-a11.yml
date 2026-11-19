@@ -9,17 +9,14 @@ env:
   DEVICE_CODENAME: "m32"
 
   CUSTOM_CMDS: "CLANG_TRIPLE=aarch64-linux-gnu-"
-  # Skip broken Git LFS smudge downloads in the Clang repo (404 objects).
-  GIT_LFS_SKIP_SMUDGE: "1"
   EXTRA_CMDS: "LD=ld.lld LLVM=1 LLVM_IAS=1 KCFLAGS=-Wno-error=unused-variable"
 
   KERNEL_SOURCE: "https://github.com/Samo1408/android_kernel_samsung_mt6768.git"
   KERNEL_BRANCH: "openela"
 
-  # Clang toolchain from Samo1408/Zyc.
-  # Keep the existing clang-12 branch name pending verification.
-  CLANG_SOURCE: "https://github.com/Samo1408/Zyc.git"
-  CLANG_BRANCH: "main"
+  # Clang is downloaded from a release archive in a dedicated step below.
+  CLANG_SOURCE: ""
+  CLANG_BRANCH: ""
   # 64-bit Android GNU cross-compiler is on the google branch.
   GCC_GNU: true
   GCC_64_SOURCE: "https://github.com/rsuntk/toolchains.git"
@@ -103,6 +100,20 @@ jobs:
 
       - name: Prepare compilation environment
         uses: ./.github/workflows/build-env
+
+      - name: Download Clang 14.0.6 release
+        run: |
+          set -e
+          rm -rf "$GITHUB_WORKSPACE/clang-custom"
+          mkdir -p "$GITHUB_WORKSPACE/clang-custom"
+          wget -O /tmp/clang.tar.gz "https://github.com/ZyCromerZ/Clang/releases/download/14.0.6-20261022-release/Clang-14.0.6-20261022.tar.gz"
+          tar -xzf /tmp/clang.tar.gz -C "$GITHUB_WORKSPACE/clang-custom" --strip-components=1
+          rm /tmp/clang.tar.gz
+          chmod +x "$GITHUB_WORKSPACE/clang-custom/bin/"*
+          echo "$GITHUB_WORKSPACE/clang-custom/bin" >> "$GITHUB_PATH"
+          "$GITHUB_WORKSPACE/clang-custom/bin/clang" --version
+          test -x "$GITHUB_WORKSPACE/clang-custom/bin/clang"
+          test -x "$GITHUB_WORKSPACE/clang-custom/bin/ld.lld"
 
       - name: Clean pre-integrated KernelSU hooks, then integrate FinaSU
         uses: ./.github/workflows/build-ready
