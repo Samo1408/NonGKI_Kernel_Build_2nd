@@ -87,6 +87,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
+      - name: Configure APT network retries and timeouts
+        run: |
+          sudo tee /etc/apt/apt.conf.d/99github-actions-network > /dev/null <<'EOF'
+          Acquire::Retries "2";
+          Acquire::http::Timeout "15";
+          Acquire::https::Timeout "15";
+          Acquire::ForceIPv4 "true";
+          EOF
+
       - name: Prepare compilation environment
         uses: ./.github/workflows/build-env
 
