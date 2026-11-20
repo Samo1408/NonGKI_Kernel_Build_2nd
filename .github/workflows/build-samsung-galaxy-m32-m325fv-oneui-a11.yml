@@ -15,7 +15,7 @@ env:
   KERNEL_BRANCH: "openela"
 
   # Clang is downloaded from a release archive in a dedicated step below.
-  CLANG_SOURCE: ""
+  CLANG_SOURCE : "https://github.com/llvm/llvm-project/releases/download/llvmorg-14.0.6/clang+llvm-14.0.6-x86_64-linux-gnu-rhel-8.4.tar.xz"
   CLANG_BRANCH: ""
   # 64-bit Android GNU cross-compiler is on the google branch.
   GCC_GNU: true
