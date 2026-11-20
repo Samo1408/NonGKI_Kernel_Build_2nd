@@ -113,20 +113,7 @@ jobs:
       - name: Prepare compilation environment
         uses: ./.github/workflows/build-env
 
-      - name: Download Clang 14.0.6 release
-        run: |
-          set -e
-          rm -rf "$GITHUB_WORKSPACE/clang-custom"
-          mkdir -p "$GITHUB_WORKSPACE/clang-custom"
-          wget -O /tmp/clang.tar.gz "https://github.com/ZyCromerZ/Clang/releases/download/14.0.6-20261022-release/Clang-14.0.6-20261022.tar.gz"
-          tar -xzf /tmp/clang.tar.gz -C "$GITHUB_WORKSPACE/clang-custom" --strip-components=1
-          rm /tmp/clang.tar.gz
-          chmod +x "$GITHUB_WORKSPACE/clang-custom/bin/"*
-          echo "$GITHUB_WORKSPACE/clang-custom/bin" >> "$GITHUB_PATH"
-          "$GITHUB_WORKSPACE/clang-custom/bin/clang" --version
-          test -x "$GITHUB_WORKSPACE/clang-custom/bin/clang"
-          test -x "$GITHUB_WORKSPACE/clang-custom/bin/ld.lld"
-
+      
       - name: Clean pre-integrated KernelSU hooks, then integrate FinaSU
         uses: ./.github/workflows/build-ready
 
