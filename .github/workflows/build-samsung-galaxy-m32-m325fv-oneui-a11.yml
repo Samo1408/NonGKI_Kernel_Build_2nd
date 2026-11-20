@@ -3,19 +3,31 @@ name: Build Samsung Galaxy M32 M325FV (OpenELA source test)
 on:
   workflow_call:
   workflow_dispatch:
+    inputs:
+      lto:
+        description: "Link-Time Optimization mode"
+        required: true
+        type: choice
+        options:
+          - none
+          - thin
+          - full
+        default: none
 
 env:
   DEVICE_NAME: "samsung_galaxy_m32"
   DEVICE_CODENAME: "m32"
 
   CUSTOM_CMDS: "CLANG_TRIPLE=aarch64-linux-gnu-"
-  EXTRA_CMDS: "LD=ld.lld LLVM=1 LLVM_IAS=1 KCFLAGS=-Wno-error=unused-variable"
+  # LTO mode is selectable when manually starting the workflow. Default is none.
+  LTO: ${{ github.event.inputs.lto || 'none' }}
+  EXTRA_CMDS: "LD=ld.lld LLVM=1 LLVM_IAS=1 KCFLAGS=-Wno-error=unused-variable LTO=${{ github.event.inputs.lto || 'none' }}"
 
   KERNEL_SOURCE: "https://github.com/Samo1408/android_kernel_samsung_mt6768.git"
   KERNEL_BRANCH: "openela"
 
   # Clang is downloaded from a release archive in a dedicated step below.
-  CLANG_SOURCE : "https://github.com/llvm/llvm-project/releases/download/llvmorg-14.0.6/clang+llvm-14.0.6-x86_64-linux-gnu-rhel-8.4.tar.xz"
+  CLANG_SOURCE: ""
   CLANG_BRANCH: ""
   # 64-bit Android GNU cross-compiler is on the google branch.
   GCC_GNU: true
@@ -100,6 +112,20 @@ jobs:
 
       - name: Prepare compilation environment
         uses: ./.github/workflows/build-env
+
+      - name: Download Clang 14.0.6 release
+        run: |
+          set -e
+          rm -rf "$GITHUB_WORKSPACE/clang-custom"
+          mkdir -p "$GITHUB_WORKSPACE/clang-custom"
+          wget -O /tmp/clang.tar.gz "https://github.com/ZyCromerZ/Clang/releases/download/14.0.6-20261022-release/Clang-14.0.6-20261022.tar.gz"
+          tar -xzf /tmp/clang.tar.gz -C "$GITHUB_WORKSPACE/clang-custom" --strip-components=1
+          rm /tmp/clang.tar.gz
+          chmod +x "$GITHUB_WORKSPACE/clang-custom/bin/"*
+          echo "$GITHUB_WORKSPACE/clang-custom/bin" >> "$GITHUB_PATH"
+          "$GITHUB_WORKSPACE/clang-custom/bin/clang" --version
+          test -x "$GITHUB_WORKSPACE/clang-custom/bin/clang"
+          test -x "$GITHUB_WORKSPACE/clang-custom/bin/ld.lld"
 
       - name: Clean pre-integrated KernelSU hooks, then integrate FinaSU
         uses: ./.github/workflows/build-ready
